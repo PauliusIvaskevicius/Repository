@@ -15,13 +15,13 @@ bool UpdateOnNextRun;
 //AMMO
 bool AmmoStatus;
 BYTE AmmoValue[] = { 0xA3, 0x1C,0x0,0x0 };
-DWORD AmmoBaseAddress = { 0x028FA410 };
-DWORD AmmoOffsets[] = { 0x384,0x14,0x0 };
+DWORD AmmoBaseAddress = { 0x00509B74 };
+DWORD AmmoOffsets[] = { 0x374,0x14,0x0 };
 
 //HEALTH
 bool HealthStatus;
 BYTE HealthValue[] = { 0x39, 0x5,0x0,0x0 };
-DWORD HealthBaseAddress = { 0x028FA410 };
+DWORD HealthBaseAddress = { 0x00509B74 };
 DWORD HealthOffsets[] = { 0xF8 };
 
 DWORD FindDmaAddy(int PointerLevel, HANDLE hProcHandle, DWORD Offsets[], DWORD BaseAddress);
@@ -83,7 +83,7 @@ int main()
 				cout << "Game status : " << GameStatus << endl;
 				cout << "[F1] Unlimited Ammo : " << sAmmoStatus << endl;
 				cout << "[F2] Unlimited Health  : " << sHealthStatus << endl;
-				cout << "[INSERT] Exit  : " << endl;
+				cout << "[INSERT] Exit " << endl;
 				UpdateOnNextRun = false;
 				timeSinceLastUpdate = clock();
 			}
@@ -91,7 +91,7 @@ int main()
 			if (isGameAvail)
 			{
 				//Write to memory
-
+				WriteToMemory(hProcHandle);
 			}
 		}
 
@@ -133,14 +133,31 @@ int main()
 DWORD FindDmaAddy(int PointerLevel, HANDLE hProcHandle, DWORD Offsets[], DWORD BaseAddress)
 {
 	DWORD pointer = BaseAddress;
+	DWORD pTemp;
+	DWORD pointerAddr;
+	for (int i = 0; i < PointerLevel; i++)
+	{
+		if (i == 0)
+		{
+			ReadProcessMemory(hProcHandle, (LPCVOID)pointer, &pTemp, sizeof(pTemp), NULL);
+		}
+		pointerAddr = pTemp + Offsets[i];
+		ReadProcessMemory(hProcHandle, (LPCVOID)pointerAddr, &pTemp, sizeof(pTemp), NULL);
+	}
+	return pointerAddr;
 }
 
 void WriteToMemory(HANDLE hProcHandle)
 {
+	DWORD AdressToWrite;
 	if (AmmoStatus)
 	{
-		DWORD AmmoAdressToWrite = FindDmaAddy();
+		AdressToWrite = FindDmaAddy(3,hProcHandle, AmmoOffsets, AmmoBaseAddress);
+		WriteProcessMemory(hProcHandle, (BYTE*)AdressToWrite, &AmmoValue, sizeof(AmmoValue), NULL);
 	}
-
-	
+	if (HealthStatus)
+	{
+		AdressToWrite = FindDmaAddy(1, hProcHandle, HealthOffsets, HealthBaseAddress);
+		WriteProcessMemory(hProcHandle, (BYTE*)AdressToWrite, &HealthValue, sizeof(HealthValue), NULL);
+	}
 }
