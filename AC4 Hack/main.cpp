@@ -123,9 +123,6 @@ int main()
 			}
 		}
 	}
-	CloseHandle(hProcHandle);
-	CloseHandle(hGameWindow);
-
 	return ERROR_SUCCESS;
 }
 
