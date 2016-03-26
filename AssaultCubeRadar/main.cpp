@@ -29,6 +29,7 @@ HDC HDC_Desktop;
 HBRUSH PlayerBrush;
 HBRUSH EnemyBrush;
 
+Vec2D centerPoint;
 string GameName = "AssaultCube";
 LPCSTR LGameWindow = "AssaultCube";
 string GameStatus = "OK";
@@ -42,6 +43,8 @@ UINT_PTR playerArrayPointer = 0x50F4F8;
 UINT_PTR playerArrayAddress = 0;
 
 int NumOfPlayers = 8;
+
+int i_timer = clock();
 
 struct MyPlayer
 {
@@ -116,7 +119,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR pStr, int nCmd)
 	int desktopwidth = GetSystemMetrics(SM_CXSCREEN);
 	int desktopheight = GetSystemMetrics(SM_CYSCREEN);
 
-	HWND hwnd = CreateWindowEx(0,                     //extended styles
+	HWND hwnd = CreateWindowEx(WS_EX_NOACTIVATE,                     //extended styles
 		classname.c_str(),     //name: wnd 'class'
 		_T("AssaultCube Radar By NobodyLTU(TheKirvis)"),   //wnd title
 		WS_OVERLAPPEDWINDOW,   //wnd style
@@ -141,62 +144,18 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR pStr, int nCmd)
 	ReadProcessMemory(hProcHandle, (LPCVOID)0x509B74, &localPlayerAddr, 4, NULL);
 	ReadProcessMemory(hProcHandle, (LPCVOID)playerArrayPointer, &playerArrayAddress, 4, NULL);
 	
-	if (!gDX.D3DInit(hwnd))
-		return 0;
+	
 
 	GetWindowRect(hwnd, &m_Rect);
-	Vec2D centerPoint;
+	
 	centerPoint.x = m_Rect.right - m_Rect.left;
 	centerPoint.y = m_Rect.bottom - m_Rect.top;
 
-	while (true)
-	{
-		gDX.dx_Device->Clear(NULL, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, NULL);
-		gDX.dx_Device->BeginScene();
-		
-		gDX.BoxFillRGBA((centerPoint.x / 2), (centerPoint.y/ 2) - 4, 1, 4, 0, 255, 255, 255);
-		gDX.BoxFillRGBA((centerPoint.x / 2), (centerPoint.y / 2) , 1, 1, 255, 255, 255, 255);
-		if (GetAsyncKeyState(VK_OEM_PLUS))
-			zoom += 0.1;
-		if (GetAsyncKeyState(VK_OEM_MINUS))
-		{
-			if (zoom - 0.1 <= 0)
-				zoom = 0.1;
-			zoom -= 0.1;
-
-		}	
-
-		for (int i = 0; i < NumOfPlayers; i++)
-		{
-			MyPlayer.ReadInformation();
-			PlayerList[i].ReadInformation(i);
-
-			if (PlayerList[i].Health <= 0)
-				continue;
-
-			Vec2D PlayerListPos; 
-			PlayerListPos.x = PlayerList[i].Position.x * zoom;
-			PlayerListPos.y = PlayerList[i].Position.y * zoom;
-
-			Vec2D MyPlayer2D;
-			MyPlayer2D.x = MyPlayer.Position.x * zoom;
-			MyPlayer2D.y = MyPlayer.Position.y * zoom;
-
-			Vec2D PositionToDraw = RotatePoint(PlayerListPos,MyPlayer2D,MyPlayer.angleY, false);
-
-			gDX.BoxFillRGBA(
-				PositionToDraw.x + ( 250.0- MyPlayer2D.x),
-				PositionToDraw.y + (250.0 - MyPlayer2D.y),
-				1, 1, 255, 0, 0, 255);
-			
-			
-		}
-
-		gDX.dx_Device->EndScene();
-		gDX.dx_Device->PresentEx(NULL, NULL, NULL, NULL, NULL);
+	if (!gDX.D3DInit(hwnd))
+		return 0;
 		
 		
-	}
+	
 	MSG msg;
 	while (GetMessage(&msg, 0, 0, 0)>0)
 	{
@@ -212,8 +171,61 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR pStr, int nCmd)
 //=============================================================================
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	
 	switch (uMsg)
 	{
+
+	case WM_PAINT:
+		if (gDX.dx_Device != NULL)
+		{
+			gDX.dx_Device->Clear(NULL, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, NULL);
+			gDX.dx_Device->BeginScene();
+
+			gDX.BoxFillRGBA((centerPoint.x / 2), (centerPoint.y / 2) - 4, 1, 4, 0, 255, 255, 255);
+			gDX.BoxFillRGBA((centerPoint.x / 2), (centerPoint.y / 2), 1, 1, 255, 255, 255, 255);
+			if (GetAsyncKeyState(VK_OEM_PLUS))
+				zoom += 0.1;
+			if (GetAsyncKeyState(VK_OEM_MINUS))
+			{
+				if (zoom - 0.1 <= 0)
+					zoom = 0.1;
+				zoom -= 0.1;
+
+			}
+
+			for (int i = 0; i < NumOfPlayers; i++)
+			{
+				MyPlayer.ReadInformation();
+				PlayerList[i].ReadInformation(i);
+
+				if (PlayerList[i].Health <= 0)
+					continue;
+
+				Vec2D PlayerListPos;
+				PlayerListPos.x = PlayerList[i].Position.x * zoom;
+				PlayerListPos.y = PlayerList[i].Position.y * zoom;
+
+				Vec2D MyPlayer2D;
+				MyPlayer2D.x = MyPlayer.Position.x * zoom;
+				MyPlayer2D.y = MyPlayer.Position.y * zoom;
+
+				Vec2D PositionToDraw = RotatePoint(PlayerListPos, MyPlayer2D, MyPlayer.angleY, false);
+
+				gDX.BoxFillRGBA(
+					PositionToDraw.x + (250.0 - MyPlayer2D.x),
+					PositionToDraw.y + (250.0 - MyPlayer2D.y),
+					1, 1, 255, 0, 0, 255);
+
+
+			}
+
+			gDX.dx_Device->EndScene();
+			gDX.dx_Device->PresentEx(NULL, NULL, NULL, NULL, NULL);
+		}
+		
+
+		break;
+
 	case WM_DESTROY:
 		PostQuitMessage(0);    //signal end of application
 		return 0;
