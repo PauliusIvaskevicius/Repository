@@ -58,13 +58,14 @@ struct MyPlayer
 
 	void ReadInformation()
 	{
-		CLocalPlayer = localPlayerAddr;
-		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0xF8), &Health, sizeof(int), 0);
-		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x225), &Name, 16, 0);
-		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x150), &SMGAmmo, sizeof(int), 0);
-		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x32c), &Team, 1, 0);
-		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x40), &angleY, sizeof(float), 0);
-		ReadProcessMemory(hProcHandle, (LPCVOID)(localPlayerAddr + 0x4), &Position, sizeof(Position), NULL);
+CLocalPlayer = localPlayerAddr;
+ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0xF8), &Health, sizeof(int), 0);
+ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x225), &Name, 16, 0);
+ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x150), &SMGAmmo, sizeof(int), 0);
+ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x32c), &Team, 1, 0);
+ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x40), &angleY, sizeof(float), 0);
+ReadProcessMemory(hProcHandle, (LPCVOID)(localPlayerAddr + 0x4), &Position, sizeof(Position), NULL);
+ReadProcessMemory(hProcHandle, (LPCVOID)0x510D98, &NumOfPlayers, sizeof(NumOfPlayers), NULL);
 
 	}
 }MyPlayer;
@@ -75,6 +76,8 @@ struct PlayerList
 	UINT_PTR CBaseEntity;
 	Vec3D Position;
 	int Health;
+	BYTE Team;
+
 	void ReadInformation(int Player)
 	{
 		ReadProcessMemory(hProcHandle, (PBYTE*)(playerArrayAddress + dw_Loop_Every + (Player * dw_Loop_Every)), &CBaseEntity, sizeof(DWORD), 0);
@@ -83,7 +86,7 @@ struct PlayerList
 
 		ReadProcessMemory(hProcHandle, (PBYTE*)(CBaseEntity + 0xF8), &Health, sizeof(int), 0);
 
-		ReadProcessMemory(hProcHandle, (LPCVOID)0x510D98, &NumOfPlayers, sizeof(NumOfPlayers), NULL);
+		ReadProcessMemory(hProcHandle, (PBYTE*)(CBaseEntity + 0x32c), &Team, 1, 0);
 	}
 }PlayerList[32];
 
@@ -143,18 +146,16 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR pStr, int nCmd)
 	FindWindowTool(hGameWindow, hProcHandle, dwProcID, GameStatus, LGameWindow);
 	ReadProcessMemory(hProcHandle, (LPCVOID)0x509B74, &localPlayerAddr, 4, NULL);
 	ReadProcessMemory(hProcHandle, (LPCVOID)playerArrayPointer, &playerArrayAddress, 4, NULL);
-	
-	
+
+
 
 	GetWindowRect(hwnd, &m_Rect);
-	
+
 	centerPoint.x = m_Rect.right - m_Rect.left;
 	centerPoint.y = m_Rect.bottom - m_Rect.top;
 
 	if (!gDX.D3DInit(hwnd))
 		return 0;
-		
-		
 	
 	MSG msg;
 	while (GetMessage(&msg, 0, 0, 0)>0)
@@ -164,9 +165,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR pStr, int nCmd)
 		DispatchMessage(&msg);
 	}
 	return static_cast<int>(msg.wParam);
-	
-	
-	
+
 }
 //=============================================================================
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -181,8 +180,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			gDX.dx_Device->Clear(NULL, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, NULL);
 			gDX.dx_Device->BeginScene();
 
-			gDX.BoxFillRGBA((centerPoint.x / 2), (centerPoint.y / 2) - 4, 1, 4, 0, 255, 255, 255);
-			gDX.BoxFillRGBA((centerPoint.x / 2), (centerPoint.y / 2), 1, 1, 255, 255, 255, 255);
+			gDX.FillRGBA((centerPoint.x / 2), (centerPoint.y / 2) - 4,	 2 * zoom, 4 * zoom, 0, 255, 255, 255);
+			gDX.FillRGBA((centerPoint.x / 2), (centerPoint.y / 2),		 3 * zoom, 3 * zoom, 255, 255, 255, 255);
 			if (GetAsyncKeyState(VK_OEM_PLUS))
 				zoom += 0.1;
 			if (GetAsyncKeyState(VK_OEM_MINUS))
@@ -211,14 +210,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				Vec2D PositionToDraw = RotatePoint(PlayerListPos, MyPlayer2D, MyPlayer.angleY, false);
 
-				gDX.BoxFillRGBA(
-					PositionToDraw.x + (250.0 - MyPlayer2D.x),
-					PositionToDraw.y + (250.0 - MyPlayer2D.y),
-					1, 1, 255, 0, 0, 255);
+				if (MyPlayer.Team == PlayerList[i].Team)
+				{
+					gDX.FillRGBA(
+						PositionToDraw.x + (250.0 - MyPlayer2D.x),
+						PositionToDraw.y + (250.0 - MyPlayer2D.y),
+						5 * zoom, 5 * zoom, 23, 189, 40, 0);
+				}
+				else
+				{
+					gDX.FillRGBA(
+						PositionToDraw.x + (250.0 - MyPlayer2D.x),
+						PositionToDraw.y + (250.0 - MyPlayer2D.y),
+						5 * zoom, 5 * zoom, 255, 0, 0, 0);
+				}
+				
 
 
 			}
-
 			gDX.dx_Device->EndScene();
 			gDX.dx_Device->PresentEx(NULL, NULL, NULL, NULL, NULL);
 		}
