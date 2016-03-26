@@ -83,6 +83,8 @@ struct PlayerList
 		ReadProcessMemory(hProcHandle, (PBYTE*)(CBaseEntity + 0x4), &Position, sizeof(float[3]), 0);
 
 		ReadProcessMemory(hProcHandle, (PBYTE*)(CBaseEntity + 0xF8), &Health, sizeof(int), 0);
+
+		ReadProcessMemory(hProcHandle, (LPCVOID)0x510D98, &NumOfPlayers, sizeof(NumOfPlayers), NULL);
 	}
 }PlayerList[32];
 
@@ -112,7 +114,7 @@ void DrawESP(int x, int y, float distance)
 void ESP()
 {
 	GetWindowRect(hGameWindow, &m_Rect);
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < NumOfPlayers; i++)
 	{
 		PlayerList[i].ReadInformation(i);
 		if (PlayerList[i].Health <= 0)
@@ -143,6 +145,7 @@ int main()
 	while (true)
 	{
 		MyPlayer.ReadInformation();
+		cout << "NUM OF PLAYERS " << NumOfPlayers << endl;
 		ESP();
 		
 	}
