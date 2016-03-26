@@ -20,10 +20,6 @@ void DrawLine(float StartX, float StartY, float EndX, float EndY, COLORREF Pen);
 void DrawString(int x, int y, COLORREF color, const char* text);
 bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix);
 
-
-
-
-
 RECT m_Rect;
 HDC HDC_Desktop;
 
@@ -86,25 +82,15 @@ struct PlayerList
 	}
 }PlayerList[32];
 
-void SetupDrawing(HDC hDesktop, HWND handle)
-{
-	HDC_Desktop = hDesktop;
-	HANDLE handl = handle;
-	EnemyBrush = CreateSolidBrush(RGB(255, 0, 0));
-	SnapLineCOLOR = RGB(0, 0, 255);
-	TextCOLOR = RGB(0, 255, 0);
-}
-
 void DrawESP(int x, int y, float distance)
 {
 	int width = 18100 / distance;
 	int height = 37500 / distance;
-	//DrawBorderBox(x - (width / 2), y - height, width, height, 1);
+	DrawBorderBox(x - (width / 2), y - height, width, height, 1);
 
 	DrawLine((m_Rect.right - m_Rect.left) / 2,
 		m_Rect.bottom - m_Rect.top, x, y,
 		SnapLineCOLOR);
-
 
 	std::stringstream ss;
 	ss << (int)distance;
@@ -123,8 +109,6 @@ void ESP()
 	for (int i = 0; i < 8; i++)
 	{
 		PlayerList[i].ReadInformation(i);
-
-
 		Vec3D EnemyXY;
 		EnemyXY.x = PlayerList[i].Position.x;
 		EnemyXY.y = PlayerList[i].Position.y;
@@ -140,9 +124,14 @@ int main()
 {
 	FindWindowTool(hGameWindow, hProcHandle, dwProcID, GameStatus, LGameWindow);
 	HDC_Desktop = GetDC(hGameWindow);
-	SetupDrawing(HDC_Desktop, hGameWindow);
+
+	EnemyBrush = CreateSolidBrush(RGB(255, 0, 0));
+	SnapLineCOLOR = RGB(0, 0, 255);
+	TextCOLOR = RGB(0, 255, 0);
+
 	ReadProcessMemory(hProcHandle, (LPCVOID)0x509B74, &localPlayerAddr, 4, NULL);
 	ReadProcessMemory(hProcHandle, (LPCVOID)playerArrayPointer, &playerArrayAddress, 4, NULL);
+
 	while(true)
 		ESP();
 
