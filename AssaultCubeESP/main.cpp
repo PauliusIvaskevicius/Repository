@@ -88,17 +88,11 @@ struct PlayerList
 
 void DrawESP(int x, int y, float distance)
 {
-	int width = 18100 / distance;
-	int height = 36000 / distance;
+	int width = 1500 / distance; // 18100
+	int height = 3000 / distance; // 36000
 
 	DrawBorderBox(x - (width / 2), y - height, width, height, 1);
-
-	DrawLine((m_Rect.right - m_Rect.left) / 2,
-		m_Rect.bottom - m_Rect.top, x, y,
-		SnapLineCOLOR);
-	/*
-	
-std::stringstream ss;
+	std::stringstream ss;
 	ss << (int)distance;
 
 	char * distanceInfo = new char[ss.str().size() + 1];
@@ -106,7 +100,13 @@ std::stringstream ss;
 
 	DrawString(x, y, TextCOLOR, distanceInfo);
 
-	delete[] distanceInfo;*/
+	delete[] distanceInfo;
+	/*DrawLine((m_Rect.right - m_Rect.left) / 2,
+		m_Rect.bottom - m_Rect.top, x, y,
+		SnapLineCOLOR);
+	
+	
+*/
 }
 
 void ESP()
