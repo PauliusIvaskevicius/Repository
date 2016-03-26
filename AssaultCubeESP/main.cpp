@@ -185,7 +185,7 @@ void ESP()
 
 
 
-bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
+/*bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
 	Out.x = In.x * ViewMatrix[0] + In.y * ViewMatrix[4] + In.z * ViewMatrix[8] + ViewMatrix[12];
 	Out.y = In.x * ViewMatrix[1] + In.y * ViewMatrix[5] + In.z * ViewMatrix[9] + ViewMatrix[13];
 	Out.z = In.x * ViewMatrix[2] + In.y * ViewMatrix[6] + In.z * ViewMatrix[10] + ViewMatrix[14];
@@ -207,6 +207,33 @@ bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
 
 	return true;
 }
+*/
+bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
+	Out.x =		In.x * ViewMatrix[0] + In.y * ViewMatrix[4] + In.z * ViewMatrix[8] + ViewMatrix[12];
+	Out.y =		In.x * ViewMatrix[1] + In.y * ViewMatrix[5] + In.z * ViewMatrix[9] + ViewMatrix[13];
+	Out.z =		In.x * ViewMatrix[2] + In.y * ViewMatrix[6] + In.z * ViewMatrix[10] + ViewMatrix[14];
+	float w =	In.x * ViewMatrix[3] + In.y * ViewMatrix[7] + In.z * ViewMatrix[11] + ViewMatrix[15];
+	//
+
+	if (w < 0.0)
+		return false;
+	//Vec3D normalizedDeviceCoordinates;
+	//normalizedDeviceCoordinates.x = Out.x / w;
+	//normalizedDeviceCoordinates.y = Out.y / w;
+	//normalizedDeviceCoordinates.z = Out.z / w;
+
+	Out.x = Out.x / w;
+	Out.y = Out.y / w;
+	Out.z = Out.z / w;
+
+	Out.x = (800.0 / 2 * Out.x) + (Out.x + 800.0 / 2);
+	Out.y = -(600.0 / 2 * Out.y) + (Out.y + 600.0 / 2);
+
+	return true;
+}
+
+
+
 
 void DrawFilledRect(int x, int y, int w, int h)
 {
