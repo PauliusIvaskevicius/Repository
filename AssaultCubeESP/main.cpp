@@ -41,12 +41,6 @@ HBRUSH EnemyBrush;
 // Colors
 COLORREF SnapLineCOLOR;
 COLORREF TextCOLOR;
-// ------------------------
-typedef struct
-{
-	float flMatrix[4][4];
-}WorldToScreenMatrix_t;
-
 // Players
 UINT_PTR localPlayerAddr = 0;
 UINT_PTR playerArrayPointer = 0x50F4F8;
@@ -75,6 +69,7 @@ struct MyPlayer
 		ReadProcessMemory(hProcHandle, (LPCVOID)dw_vMatrix, &viewMatrix, sizeof(viewMatrix), NULL);
 	}
 }MyPlayer;
+
 struct PlayerList
 {
 	DWORD dw_Loop_Every = 0x4;
@@ -102,7 +97,6 @@ void SetupDrawing(HDC hDesktop, HWND handle)
 
 void DrawESP(int x, int y, float distance)
 {
-	//ESP RECTANGLE
 	int width = 18100 / distance;
 	int height = 37500 / distance;
 	//DrawBorderBox(x - (width / 2), y - height, width, height, 1);
@@ -142,14 +136,11 @@ void ESP()
 	}
 }
 
-DWORD Offsets[] = { 0x0,0x0 };
-
 int main()
 {
 	FindWindowTool(hGameWindow, hProcHandle, dwProcID, GameStatus, LGameWindow);
 	HDC_Desktop = GetDC(hGameWindow);
 	SetupDrawing(HDC_Desktop, hGameWindow);
-
 	ReadProcessMemory(hProcHandle, (LPCVOID)0x509B74, &localPlayerAddr, 4, NULL);
 	ReadProcessMemory(hProcHandle, (LPCVOID)playerArrayPointer, &playerArrayAddress, 4, NULL);
 	while(true)
@@ -188,7 +179,6 @@ int main()
 	return 0;
 }
 
-
 bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
 	Out.x = In.x * ViewMatrix[0] + In.y * ViewMatrix[4] + In.z * ViewMatrix[8] + ViewMatrix[12];
 	Out.y = In.x * ViewMatrix[1] + In.y * ViewMatrix[5] + In.z * ViewMatrix[9] + ViewMatrix[13];
@@ -211,13 +201,11 @@ bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
 	return true;
 }
 
-
 void DrawFilledRect(int x, int y, int w, int h)
 {
 	RECT rect = { x, y, x + w, y + h };
 	FillRect(HDC_Desktop, &rect, EnemyBrush);
 }
-
 
 void DrawBorderBox(int x, int y, int w, int h, int thickness)
 {
@@ -230,7 +218,6 @@ void DrawBorderBox(int x, int y, int w, int h, int thickness)
 	//bottom horiz line
 	DrawFilledRect(x, y + h, w + thickness, thickness);
 }
-
 
 void DrawLine(float StartX, float StartY, float EndX, float EndY, COLORREF Pen)
 {
@@ -246,7 +233,6 @@ void DrawLine(float StartX, float StartY, float EndX, float EndY, COLORREF Pen)
 	DeleteObject(SelectObject(HDC_Desktop, hOPen));
 }
 
-//Draw our text with this function
 void DrawString(int x, int y, COLORREF color, const char* text)
 {
 	SetTextAlign(HDC_Desktop, TA_CENTER | TA_NOUPDATECP);
