@@ -20,6 +20,10 @@ void DrawLine(float StartX, float StartY, float EndX, float EndY, COLORREF Pen);
 void DrawString(int x, int y, COLORREF color, const char* text);
 bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix);
 
+
+
+
+
 RECT m_Rect;
 HDC HDC_Desktop;
 
@@ -44,28 +48,14 @@ typedef struct
 }WorldToScreenMatrix_t;
 
 // Players
-
 UINT_PTR localPlayerAddr = 0;
-UINT_PTR playerArrayPointer = 0x50F4F8;//multiplayer
+UINT_PTR playerArrayPointer = 0x50F4F8;
 UINT_PTR playerArrayAddress = 0;
 
-
 const DWORD Player_Count = 0x55D6F08;
-
-const DWORD dw_Player_HP = 0xF8;
-const DWORD dw_Player_ARM = 0xFC;
-const DWORD dw_Player_SMGAMMO = 0x150;
-const DWORD dw_Player_PISTAMMO = 0x44;
-const DWORD dw_Player_NAME = 0x12D;
-
-
-const DWORD dw_Loop_Every = 0x4;
 const DWORD dw_Player_Other_NAME = 0x225;
 
 int NumOfPlayers = 8;
-
-
-
 int i_Timer = clock();
 
 struct MyPlayer
@@ -79,16 +69,15 @@ struct MyPlayer
 	void ReadInformation()
 	{
 		CLocalPlayer = localPlayerAddr;
-		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr+ dw_Player_HP), &Health, sizeof(int), 0);
-		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + dw_Player_SMGAMMO), &SMGAmmo, sizeof(int), 0);
+		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0xF8), &Health, sizeof(int), 0);
+		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x150), &SMGAmmo, sizeof(int), 0);
 		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x4), &Position, sizeof(float[3]), 0);
 		ReadProcessMemory(hProcHandle, (LPCVOID)dw_vMatrix, &viewMatrix, sizeof(viewMatrix), NULL);
 	}
-	//00501AE8 View Matrix dw_vMatrix
 }MyPlayer;
-
 struct PlayerList
 {
+	DWORD dw_Loop_Every = 0x4;
 	UINT_PTR CBaseEntity;
 	Vec3D Position;
 	int Health;
@@ -102,14 +91,11 @@ struct PlayerList
 	}
 }PlayerList[32];
 
-
-
 void SetupDrawing(HDC hDesktop, HWND handle)
 {
 	HDC_Desktop = hDesktop;
 	HANDLE handl = handle;
 	EnemyBrush = CreateSolidBrush(RGB(255, 0, 0));
-	//Color
 	SnapLineCOLOR = RGB(0, 0, 255);
 	TextCOLOR = RGB(0, 255, 0);
 }
@@ -119,9 +105,8 @@ void DrawESP(int x, int y, float distance)
 	//ESP RECTANGLE
 	int width = 18100 / distance;
 	int height = 37500 / distance;
-	DrawBorderBox(x - (width / 2), y - height, width, height, 1);
+	//DrawBorderBox(x - (width / 2), y - height, width, height, 1);
 
-	//Sandwich ++
 	DrawLine((m_Rect.right - m_Rect.left) / 2,
 		m_Rect.bottom - m_Rect.top, x, y,
 		SnapLineCOLOR);
@@ -161,9 +146,6 @@ DWORD Offsets[] = { 0x0,0x0 };
 
 int main()
 {
-	
-
-	cout << " PlayerBase " << playerArrayAddress;
 	FindWindowTool(hGameWindow, hProcHandle, dwProcID, GameStatus, LGameWindow);
 	HDC_Desktop = GetDC(hGameWindow);
 	SetupDrawing(HDC_Desktop, hGameWindow);
@@ -232,9 +214,7 @@ bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
 
 void DrawFilledRect(int x, int y, int w, int h)
 {
-	//We create our rectangle to draw on screen
 	RECT rect = { x, y, x + w, y + h };
-	//We clear that portion of the screen and display our rectangle
 	FillRect(HDC_Desktop, &rect, EnemyBrush);
 }
 
@@ -252,7 +232,6 @@ void DrawBorderBox(int x, int y, int w, int h, int thickness)
 }
 
 
-//Here is where we draw our line from point A to Point B
 void DrawLine(float StartX, float StartY, float EndX, float EndY, COLORREF Pen)
 {
 	int a, b = 0;
@@ -283,6 +262,7 @@ void DrawString(int x, int y, COLORREF color, const char* text)
 
 	DeleteObject(Font);
 }
+
 float Get3dDistance(Vec3D myCoords, Vec3D enemyCoords)
 {
 	return sqrt(
