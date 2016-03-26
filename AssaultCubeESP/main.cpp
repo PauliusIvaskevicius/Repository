@@ -19,6 +19,7 @@ void DrawFilledRect(int x, int y, int w, int h);
 void DrawLine(float StartX, float StartY, float EndX, float EndY, COLORREF Pen);
 void DrawString(int x, int y, COLORREF color, const char* text);
 bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix);
+void ESP();
 
 RECT m_Rect;
 HDC HDC_Desktop;
@@ -61,7 +62,9 @@ struct MyPlayer
 		CLocalPlayer = localPlayerAddr;
 		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0xF8), &Health, sizeof(int), 0);
 		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x150), &SMGAmmo, sizeof(int), 0);
-		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x4), &Position, sizeof(float[3]), 0);
+		//ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x4), &Position, sizeof(float[3]), 0);
+		ReadProcessMemory(hProcHandle, (LPCVOID)(localPlayerAddr + 0x4), &Position, sizeof(Position), NULL);
+
 		ReadProcessMemory(hProcHandle, (LPCVOID)dw_vMatrix, &viewMatrix, sizeof(viewMatrix), NULL);
 	}
 }MyPlayer;
@@ -75,9 +78,6 @@ struct PlayerList
 	int Health;
 	void ReadInformation(int Player)
 	{
-		Position.x = NULL; Position.y = NULL; Position.z = NULL;
-		CBaseEntity = NULL;
-
 		ReadProcessMemory(hProcHandle, (PBYTE*)(playerArrayAddress + dw_Loop_Every + (Player * dw_Loop_Every)) , &CBaseEntity, sizeof(DWORD), 0);
 		
 		ReadProcessMemory(hProcHandle, (PBYTE*)(CBaseEntity + 0x4), &Position, sizeof(float[3]), 0);
@@ -88,12 +88,67 @@ struct PlayerList
 	}
 }PlayerList[32];
 
+int main()
+{
+	FindWindowTool(hGameWindow, hProcHandle, dwProcID, GameStatus, LGameWindow);
+	HDC_Desktop = GetDC(hGameWindow);
+
+	EnemyBrush = CreateSolidBrush(RGB(255, 0, 0));
+	SnapLineCOLOR = RGB(0, 0, 255);
+	TextCOLOR = RGB(0, 255, 0);
+
+	ReadProcessMemory(hProcHandle, (LPCVOID)0x509B74, &localPlayerAddr, 4, NULL);
+	ReadProcessMemory(hProcHandle, (LPCVOID)playerArrayPointer, &playerArrayAddress, 4, NULL);
+
+	while (true)
+	{
+		//system("cls");
+		MyPlayer.ReadInformation();
+		cout << MyPlayer.Position.x << " " << MyPlayer.Position.y << " " << MyPlayer.Position.z << endl;
+		ESP();
+
+	}
+
+	/*while (!GetAsyncKeyState(VK_INSERT))
+	{
+	system("cls");
+	MyPlayer.ReadInformation();
+	ESP();
+	cout << MyPlayer.Position.x << " " << MyPlayer.Position.y << " " << MyPlayer.Position.z <<  endl;
+	cout << playerArrayAddress << endl;
+	for (int i = 0; i < NumOfPlayers; i++)
+	{
+	cout << "BOT " << i << " x , y , z : " << PlayerList[i].Position.x << " , " << PlayerList[i].Position.y << " " << PlayerList[i].Position.z << endl;
+	}
+	/*if (clock() - i_Timer > 100)
+	{
+	system("cls");
+	cout << GameStatus << endl;
+	//ReadProcessMemory(hProcHandle,  (LPCVOID)FindDmaAddy(0,hProcHandle,NULL,Player_Count), &NumOfPlayers, sizeof(int), 0);
+	cout << NumOfPlayers << endl;
+
+
+	for (int i = 0; i < NumOfPlayers; i++)
+	{
+	PlayerList[i].ReadInformation(i);
+	cout << "BOT " <<  i << " x , y , z : " << PlayerList[i].Position[0] << " , " << PlayerList[i].Position[1]<< PlayerList[i].Position[2] << endl;
+	}
+
+	cout << "Player HP : " << MyPlayer.Health << endl;
+	//cout << "Player Name : " << MyPlayer.Name << endl;
+	}
+	}
+	*/
+	return 0;
+}
+
 void DrawESP(int x, int y, float distance)
 {
 	int width = 1500 / distance; // 18100
 	int height = 3000 / distance; // 36000
 
-	DrawBorderBox(x - (width / 2), y - height, width, height, 1);
+	//DrawBorderBox(x- (width / 2), y - height, width, height, 2);
+	DrawBorderBox(x , y, width, height, 2);
 	std::stringstream ss;
 	ss << (int)distance;
 
@@ -103,12 +158,12 @@ void DrawESP(int x, int y, float distance)
 	DrawString(x, y, TextCOLOR, distanceInfo);
 
 	delete[] distanceInfo;
+
+
 	/*DrawLine((m_Rect.right - m_Rect.left) / 2,
 		m_Rect.bottom - m_Rect.top, x, y,
 		SnapLineCOLOR);
-	
-	
-*/
+	*/
 }
 
 void ESP()
@@ -122,73 +177,20 @@ void ESP()
 		Vec3D EnemyXY;
 		if (WorldToScreen(PlayerList[i].Position, EnemyXY,MyPlayer.viewMatrix))
 		{
-			cout << "works " << endl;
 			DrawESP(EnemyXY.x - m_Rect.left, EnemyXY.y - m_Rect.top, Get3dDistance(MyPlayer.Position, PlayerList[i].Position));
 		}
 
 	}
 }
 
-int main()
-{
-	FindWindowTool(hGameWindow, hProcHandle, dwProcID, GameStatus, LGameWindow);
-	HDC_Desktop = GetDC(hGameWindow);
 
-
-	EnemyBrush = CreateSolidBrush(RGB(255, 0, 0));
-	SnapLineCOLOR = RGB(0, 0, 255);
-	TextCOLOR = RGB(0, 255, 0);
-
-	ReadProcessMemory(hProcHandle, (LPCVOID)0x509B74, &localPlayerAddr, 4, NULL);
-	ReadProcessMemory(hProcHandle, (LPCVOID)playerArrayPointer, &playerArrayAddress, 4, NULL);
-
-	while (true)
-	{
-		MyPlayer.ReadInformation();
-		cout << "NUM OF PLAYERS " << NumOfPlayers << endl;
-		ESP();
-		
-	}
-		
-
-	/*while (!GetAsyncKeyState(VK_INSERT))
-	{
-		system("cls");
-		MyPlayer.ReadInformation();
-		ESP();
-		cout << MyPlayer.Position.x << " " << MyPlayer.Position.y << " " << MyPlayer.Position.z <<  endl;
-		cout << playerArrayAddress << endl;
-		for (int i = 0; i < NumOfPlayers; i++)
-		{
-			cout << "BOT " << i << " x , y , z : " << PlayerList[i].Position.x << " , " << PlayerList[i].Position.y << " " << PlayerList[i].Position.z << endl;
-		}
-		/*if (clock() - i_Timer > 100)
-		{
-			system("cls");
-			cout << GameStatus << endl;
-			//ReadProcessMemory(hProcHandle,  (LPCVOID)FindDmaAddy(0,hProcHandle,NULL,Player_Count), &NumOfPlayers, sizeof(int), 0);
-			cout << NumOfPlayers << endl;
-
-			
-			for (int i = 0; i < NumOfPlayers; i++)
-			{
-				PlayerList[i].ReadInformation(i);
-				cout << "BOT " <<  i << " x , y , z : " << PlayerList[i].Position[0] << " , " << PlayerList[i].Position[1]<< PlayerList[i].Position[2] << endl;
-			}
-			
-			cout << "Player HP : " << MyPlayer.Health << endl;
-			//cout << "Player Name : " << MyPlayer.Name << endl;
-		}
-	}
-	*/
-	return 0;
-}
 
 bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
 	Out.x = In.x * ViewMatrix[0] + In.y * ViewMatrix[4] + In.z * ViewMatrix[8] + ViewMatrix[12];
 	Out.y = In.x * ViewMatrix[1] + In.y * ViewMatrix[5] + In.z * ViewMatrix[9] + ViewMatrix[13];
 	Out.z = In.x * ViewMatrix[2] + In.y * ViewMatrix[6] + In.z * ViewMatrix[10] + ViewMatrix[14];
 	float w = In.x * ViewMatrix[3] + In.y * ViewMatrix[7] + In.z * ViewMatrix[11] + ViewMatrix[15];
+	//
 
 	if (w < 0.0)
 		return false;
@@ -260,5 +262,4 @@ float Get3dDistance(Vec3D myCoords, Vec3D enemyCoords)
 		pow(double(enemyCoords.x - myCoords.x), 2.0) +
 		pow(double(enemyCoords.y - myCoords.y), 2.0) +
 		pow(double(enemyCoords.z - myCoords.z), 2.0));
-
 }
