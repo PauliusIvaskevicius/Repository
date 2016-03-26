@@ -68,12 +68,16 @@ struct MyPlayer
 
 struct PlayerList
 {
+
 	DWORD dw_Loop_Every = 0x4;
 	UINT_PTR CBaseEntity;
 	Vec3D Position;
 	int Health;
 	void ReadInformation(int Player)
 	{
+		Position.x = NULL; Position.y = NULL; Position.z = NULL;
+		CBaseEntity = NULL;
+
 		ReadProcessMemory(hProcHandle, (PBYTE*)(playerArrayAddress + dw_Loop_Every + (Player * dw_Loop_Every)) , &CBaseEntity, sizeof(DWORD), 0);
 		
 		ReadProcessMemory(hProcHandle, (PBYTE*)(CBaseEntity + 0x4), &Position, sizeof(float[3]), 0);
@@ -85,14 +89,16 @@ struct PlayerList
 void DrawESP(int x, int y, float distance)
 {
 	int width = 18100 / distance;
-	int height = 37500 / distance;
+	int height = 36000 / distance;
+
 	DrawBorderBox(x - (width / 2), y - height, width, height, 1);
 
 	DrawLine((m_Rect.right - m_Rect.left) / 2,
 		m_Rect.bottom - m_Rect.top, x, y,
 		SnapLineCOLOR);
-
-	std::stringstream ss;
+	/*
+	
+std::stringstream ss;
 	ss << (int)distance;
 
 	char * distanceInfo = new char[ss.str().size() + 1];
@@ -100,7 +106,7 @@ void DrawESP(int x, int y, float distance)
 
 	DrawString(x, y, TextCOLOR, distanceInfo);
 
-	delete[] distanceInfo;
+	delete[] distanceInfo;*/
 }
 
 void ESP()
@@ -109,11 +115,12 @@ void ESP()
 	for (int i = 0; i < 8; i++)
 	{
 		PlayerList[i].ReadInformation(i);
+		if (PlayerList[i].Health <= 0)
+			continue;
 		Vec3D EnemyXY;
-		EnemyXY.x = PlayerList[i].Position.x;
-		EnemyXY.y = PlayerList[i].Position.y;
 		if (WorldToScreen(PlayerList[i].Position, EnemyXY,MyPlayer.viewMatrix))
 		{
+			cout << "works " << endl;
 			DrawESP(EnemyXY.x - m_Rect.left, EnemyXY.y - m_Rect.top, Get3dDistance(MyPlayer.Position, PlayerList[i].Position));
 		}
 
@@ -125,6 +132,7 @@ int main()
 	FindWindowTool(hGameWindow, hProcHandle, dwProcID, GameStatus, LGameWindow);
 	HDC_Desktop = GetDC(hGameWindow);
 
+
 	EnemyBrush = CreateSolidBrush(RGB(255, 0, 0));
 	SnapLineCOLOR = RGB(0, 0, 255);
 	TextCOLOR = RGB(0, 255, 0);
@@ -132,8 +140,13 @@ int main()
 	ReadProcessMemory(hProcHandle, (LPCVOID)0x509B74, &localPlayerAddr, 4, NULL);
 	ReadProcessMemory(hProcHandle, (LPCVOID)playerArrayPointer, &playerArrayAddress, 4, NULL);
 
-	while(true)
+	while (true)
+	{
+		MyPlayer.ReadInformation();
 		ESP();
+		
+	}
+		
 
 	/*while (!GetAsyncKeyState(VK_INSERT))
 	{
