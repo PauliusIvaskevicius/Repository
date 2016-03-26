@@ -52,8 +52,11 @@ int i_Timer = clock();
 struct MyPlayer
 {
 	UINT_PTR CLocalPlayer;
-	int Health = 1;
-	int SMGAmmo = 100;
+	int Health;
+	int SMGAmmo;
+	char Name[16];
+	BYTE Team;
+
 	float viewMatrix[16];
 	Vec3D Position;
 
@@ -61,7 +64,9 @@ struct MyPlayer
 	{
 		CLocalPlayer = localPlayerAddr;
 		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0xF8), &Health, sizeof(int), 0);
+		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x225), &Name, 16, 0);
 		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x150), &SMGAmmo, sizeof(int), 0);
+		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x32c), &Team, 1, 0);
 		//ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x4), &Position, sizeof(float[3]), 0);
 		ReadProcessMemory(hProcHandle, (LPCVOID)(localPlayerAddr + 0x4), &Position, sizeof(Position), NULL);
 

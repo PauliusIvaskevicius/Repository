@@ -73,4 +73,12 @@ bool InjectDLL(DWORD processId)
 	CloseHandle(hProc);
 	return memoryWritten;
 }
+	/*
+
+004637E9 - dec [esi]
+
 	
+	
+	
+	
+	*/
