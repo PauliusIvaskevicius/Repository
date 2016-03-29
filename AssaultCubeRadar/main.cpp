@@ -34,8 +34,9 @@ LPDIRECT3DTEXTURE9 tex;
 LPD3DXSPRITE sprite;
 D3DXVECTOR3 position;
 D3DCOLOR color;
-bool spriteInit = true;
-Sprait gCom;
+
+
+Sprite spriteDirect;
 
 Vec2D centerPoint;
 string GameName = "AssaultCube";
@@ -52,8 +53,6 @@ UINT_PTR playerArrayAddress = 0;
 
 int NumOfPlayers = 8;
 
-int i_timer = clock();
-
 struct MyPlayer
 {
 	UINT_PTR CLocalPlayer;
@@ -63,7 +62,6 @@ struct MyPlayer
 	char Name[16];
 	BYTE Team;
 	Vec3D Position;
-
 	void ReadInformation()
 	{
 		CLocalPlayer = localPlayerAddr;
@@ -77,23 +75,19 @@ struct MyPlayer
 
 	}
 }MyPlayer;
+
 struct PlayerList
 {
-
 	DWORD dw_Loop_Every = 0x4;
 	UINT_PTR CBaseEntity;
 	Vec3D Position;
 	int Health;
 	BYTE Team;
-
 	void ReadInformation(int Player)
 	{
 		ReadProcessMemory(hProcHandle, (PBYTE*)(playerArrayAddress + dw_Loop_Every + (Player * dw_Loop_Every)), &CBaseEntity, sizeof(DWORD), 0);
-
 		ReadProcessMemory(hProcHandle, (PBYTE*)(CBaseEntity + 0x4), &Position, sizeof(float[3]), 0);
-
 		ReadProcessMemory(hProcHandle, (PBYTE*)(CBaseEntity + 0xF8), &Health, sizeof(int), 0);
-
 		ReadProcessMemory(hProcHandle, (PBYTE*)(CBaseEntity + 0x32c), &Team, 1, 0);
 	}
 }PlayerList[32];
@@ -103,7 +97,7 @@ inline int ErrMsg(const ustring&);
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR pStr, int nCmd)
 {
 	ustring classname = _T("AssaultCube Radar By NobodyLTU(TheKirvis)");
-	WNDCLASSEX wcx = { 0 };  //used for storing information about the wnd 'class'
+	WNDCLASSEX wcx = { 0 };  
 
 	wcx.cbSize = sizeof(WNDCLASSEX);
 	wcx.lpfnWndProc = WndProc;            
@@ -114,8 +108,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR pStr, int nCmd)
 		IMAGE_CURSOR, 0, 0, LR_SHARED));
 	wcx.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1);
 	wcx.lpszClassName = classname.c_str();
-	//the window 'class' (not c++ class) has to be registered with the system
-	//before windows of that 'class' can be created
+
 	if (!RegisterClassEx(&wcx))
 	{
 		ErrMsg(_T("Failed to register window class"));
@@ -150,21 +143,14 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR pStr, int nCmd)
 	ReadProcessMemory(hProcHandle, (LPCVOID)0x509B74, &localPlayerAddr, 4, NULL);
 	ReadProcessMemory(hProcHandle, (LPCVOID)playerArrayPointer, &playerArrayAddress, 4, NULL);
 
-
-
 	GetWindowRect(hwnd, &m_Rect);
 
 	centerPoint.x = m_Rect.right - m_Rect.left;
 	centerPoint.y = m_Rect.bottom - m_Rect.top;
 
-
-	
-
-
 	if (!gDX.D3DInit(hwnd))
 		return 0;
-
-	gCom.Init(0, -20, "radar.png");
+	spriteDirect.Init(0, -20, "radar.png");
 
 
 	MSG msg;
@@ -177,27 +163,19 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR pStr, int nCmd)
 	return static_cast<int>(msg.wParam);
 
 }
-//=============================================================================
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	
 	switch (uMsg)
 	{
-
 	case WM_PAINT:
 		if (gDX.dx_Device != NULL)
 		{
-			
-			if (spriteInit)
-			{
-				
 				gDX.dx_Device->Clear(NULL, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, NULL);
 				gDX.dx_Device->BeginScene();
 	
-
-				gCom.Draw();
+				spriteDirect.Draw();
 				gDX.FillRGBA((centerPoint.x / 2)  - ((2 * zoom) / 2), (centerPoint.y / 2) - 8, 4 * zoom, 8 * zoom, 0, 255, 255, 255);
-				//gDX.FillRGBA((centerPoint.x / 2), (centerPoint.y / 2), 3 * zoom, 3 * zoom, 255, 255, 255, 255);
 				if (GetAsyncKeyState(VK_OEM_PLUS))
 					zoom += 0.1;
 				if (GetAsyncKeyState(VK_OEM_MINUS))
@@ -207,7 +185,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					zoom -= 0.1;
 
 				}
-
 				for (int i = 0; i < NumOfPlayers; i++)
 				{
 					MyPlayer.ReadInformation();
@@ -247,12 +224,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				
 				gDX.dx_Device->EndScene();
 				gDX.dx_Device->PresentEx(NULL, NULL, NULL, NULL, NULL);
-
 			}
-			
-		}
-		
-
 		break;
 
 	case WM_DESTROY:
@@ -267,8 +239,6 @@ inline int ErrMsg(const ustring& s)
 {
 	return MessageBox(0, s.c_str(), _T("ERROR"), MB_OK | MB_ICONEXCLAMATION);
 }
-
-
 void FindWindowTool(HWND& hGameWindow, HANDLE& hProcHandle, DWORD& dwProcID, string& GameStatus, LPCSTR LGameWindow)
 {
 	hGameWindow = FindWindowA(NULL, LGameWindow);
