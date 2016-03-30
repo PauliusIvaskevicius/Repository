@@ -68,7 +68,10 @@ struct MyPlayer
 		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x150), &SMGAmmo, sizeof(int), 0);
 		ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x32c), &Team, 1, 0);
 		//ReadProcessMemory(hProcHandle, (PBYTE*)(localPlayerAddr + 0x4), &Position, sizeof(float[3]), 0);
-		ReadProcessMemory(hProcHandle, (LPCVOID)(localPlayerAddr + 0x4), &Position, sizeof(Position), NULL);
+		//ReadProcessMemory(hProcHandle, (LPCVOID)(localPlayerAddr + 0x4), &Position, sizeof(Position), NULL);
+		ReadProcessMemory(hProcHandle, (LPCVOID)(localPlayerAddr + 0x4), &Position.y, sizeof(float), NULL);
+		ReadProcessMemory(hProcHandle, (LPCVOID)(localPlayerAddr + 0x4 + 0x4), &Position.x, sizeof(float), NULL);
+		ReadProcessMemory(hProcHandle, (LPCVOID)(localPlayerAddr + 0x4 + 0x4 + 0x4), &Position.z, sizeof(float), NULL);
 
 		ReadProcessMemory(hProcHandle, (LPCVOID)dw_vMatrix, &viewMatrix, sizeof(viewMatrix), NULL);
 	}
@@ -109,7 +112,7 @@ int main()
 	{
 		//system("cls");
 		MyPlayer.ReadInformation();
-		cout << MyPlayer.Position.x << " " << MyPlayer.Position.y << " " << MyPlayer.Position.z << endl;
+		//cout << MyPlayer.Position.x << " " << MyPlayer.Position.y << " " << MyPlayer.Position.z << endl;
 		ESP();
 
 	}
@@ -190,7 +193,9 @@ void ESP()
 
 
 
-/*bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
+
+
+bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
 	Out.x = In.x * ViewMatrix[0] + In.y * ViewMatrix[4] + In.z * ViewMatrix[8] + ViewMatrix[12];
 	Out.y = In.x * ViewMatrix[1] + In.y * ViewMatrix[5] + In.z * ViewMatrix[9] + ViewMatrix[13];
 	Out.z = In.x * ViewMatrix[2] + In.y * ViewMatrix[6] + In.z * ViewMatrix[10] + ViewMatrix[14];
@@ -200,19 +205,20 @@ void ESP()
 	if (w < 0.0)
 		return false;
 
+
 	Out.x /= w;
 	Out.y /= w;
 	Out.z /= w;
 
-	Out.x *= 800 / 2.0f;
-	Out.x += 800 / 2.0f;
+	Out.x *= 800;
+	Out.x += 800;
 
-	Out.y *= -600 / 2.0f;
-	Out.y += 600 / 2.0f;
+	Out.y *= -900 / 2.0f;
+	Out.y += 900 / 2.0f;
 
 	return true;
 }
-*/
+/*
 bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
 	Out.x =		In.x * ViewMatrix[0] + In.y * ViewMatrix[4] + In.z * ViewMatrix[8] + ViewMatrix[12];
 	Out.y =		In.x * ViewMatrix[1] + In.y * ViewMatrix[5] + In.z * ViewMatrix[9] + ViewMatrix[13];
@@ -236,7 +242,7 @@ bool WorldToScreen(Vec3D In, Vec3D& Out, float * ViewMatrix) {
 
 	return true;
 }
-
+*/
 
 
 
